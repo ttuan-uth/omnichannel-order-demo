@@ -1,0 +1,56 @@
+<%- include('../layout/header') %>
+
+<h1>Giỏ hàng</h1>
+
+<% if (items.length === 0) { %>
+  <div class="empty-state">
+    <p>Giỏ hàng của bạn đang trống.</p>
+    <p><a href="/">← Xem sản phẩm</a></p>
+  </div>
+<% } else { %>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Sản phẩm</th>
+        <th>Đơn giá</th>
+        <th>Số lượng</th>
+        <th>Thành tiền</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% for (const it of items) { %>
+        <tr>
+          <td><%= it.product.image_emoji %> <%= it.product.name %></td>
+          <td><%= formatVND(it.product.price) %></td>
+          <td>
+            <form action="/cart/update" method="post" class="inline-form">
+              <input type="hidden" name="product_id" value="<%= it.product.id %>">
+              <input type="number" name="quantity" value="<%= it.quantity %>" min="1" max="<%= it.product.stock %>">
+              <button type="submit" class="btn btn-small">Cập nhật</button>
+            </form>
+          </td>
+          <td><%= formatVND(it.lineTotal) %></td>
+          <td>
+            <form action="/cart/remove" method="post" class="inline-form">
+              <input type="hidden" name="product_id" value="<%= it.product.id %>">
+              <button type="submit" class="btn btn-small btn-danger">Xóa</button>
+            </form>
+          </td>
+        </tr>
+      <% } %>
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="3" class="text-right"><strong>Tổng cộng</strong></td>
+        <td colspan="2"><strong class="price"><%= formatVND(total) %></strong></td>
+      </tr>
+    </tfoot>
+  </table>
+  <p>
+    <a href="/" class="btn">← Mua thêm</a>
+    <a href="/checkout" class="btn btn-primary">Tiến hành đặt hàng →</a>
+  </p>
+<% } %>
+
+<%- include('../layout/footer') %>

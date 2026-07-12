@@ -1,0 +1,110 @@
+<%- include('../layout/header') %>
+
+<p><a href="/admin">← Danh sách đơn</a></p>
+<h1>Đơn hàng #<%= order.id %>
+  <span class="status status-<%= order.status %>"><%= STATUS_LABELS[order.status] %></span>
+</h1>
+
+<div class="checkout-grid">
+  <div class="card">
+    <h2>Thông tin đơn</h2>
+    <ul class="info-list">
+      <li><strong>Khách hàng:</strong> <%= customer.full_name %> (<%= customer.username %>)</li>
+      <li><strong>Ngày đặt:</strong> <%= order.created_at %></li>
+      <li><strong>Kênh đặt hàng:</strong> <%= ORDER_CHANNEL_LABELS[order.order_channel] %></li>
+      <li><strong>Cách nhận:</strong> <%= RECEIVE_METHOD_LABELS[order.receive_method] %></li>
+      <li><strong>Người nhận:</strong> <%= order.receiver_name %> — <%= order.receiver_phone %></li>
+      <% if (order.address) { %><li><strong>Địa chỉ:</strong> <%= order.address %></li><% } %>
+      <% if (order.tracking_code) { %>
+        <li><strong>Mã vận đơn:</strong> <span class="tracking-code"><%= order.tracking_code %></span></li>
+      <% } %>
+      <% if (order.cancel_reason) { %>
+        <li><strong>Lý do hủy:</strong> <span class="cancel-reason"><%= order.cancel_reason %></span></li>
+      <% } %>
+      <li><strong>Thanh toán:</strong> <%= PAYMENT_METHOD_LABELS[order.payment_method] %>
+        — <span class="status status-<%= order.payment_status === 'da_thanh_toan' ? 'da_giao' : 'cho_xac_nhan' %>"><%= PAYMENT_STATUS_LABELS[order.payment_status] %></span></li>
+      <li><strong>Tổng tiền:</strong> <span class="price"><%= formatVND(order.total) %></span></li>
+    </ul>
+
+    <h2>Sản phẩm (kèm tồn kho hiện tại — WMS)</h2>
+    <table class="table">
+      <thead>
+        <tr><th>Sản phẩm</th><th>SL đặt</th><th>Tồn kho</th><th>Thành tiền</th></tr>
+      </thead>
+      <tbody>
+        <% for (const it of items) { %>
+          <tr>
+            <td><%= it.image_emoji %> <%= it.name %></td>
+            <td><%= it.quantity %></td>
+            <td class="<%= order.status === 'cho_xac_nhan' && it.quantity > it.stock ? 'stock-out' : '' %>"><%= it.stock %></td>
+            <td><%= formatVND(it.price * it.quantity) %></td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+
+    <h2>Thao tác</h2>
+    <div class="actions">
+      <% if (order.status === 'cho_xac_nhan') { %>
+        <form action="/admin/orders/<%= order.id %>/confirm" method="post" class="inline-form">
+          <button type="submit" class="btn btn-primary">✅ OMS xác nhận (WMS kiểm tra + trừ kho)</button>
+        </form>
+      <% } %>
+      <% if (order.status === 'da_xac_nhan') { %>
+        <form action="/admin/orders/<%= order.id %>/pick" method="post" class="inline-form">
+          <button type="submit" class="btn btn-primary">📦 Bắt đầu lấy hàng (picking)</button>
+        </form>
+      <% } %>
+      <% if (order.status === 'dang_lay_hang') { %>
+        <form action="/admin/orders/<%= order.id %>/pack" method="post" class="inline-form">
+          <button type="submit" class="btn btn-primary">🎁 Đóng gói xong (packing)</button>
+        </form>
+      <% } %>
+      <% if (order.status === 'da_dong_goi' && order.receive_method === 'giao_tan_noi') { %>
+        <form action="/admin/orders/<%= order.id %>/ship" method="post" class="inline-form">
+          <button type="submit" class="btn btn-primary">🚚 TMS bắt đầu giao (sinh mã vận đơn)</button>
+        </form>
+      <% } %>
+      <% if (order.status === 'da_dong_goi' && order.receive_method === 'nhan_tai_quay') { %>
+        <form action="/admin/orders/<%= order.id %>/complete" method="post" class="inline-form">
+          <button type="submit" class="btn btn-primary">🏪 Khách đã nhận hàng tại nhà thuốc</button>
+        </form>
+      <% } %>
+      <% if (order.status === 'dang_giao') { %>
+        <form action="/admin/orders/<%= order.id %>/complete" method="post" class="inline-form">
+          <button type="submit" class="btn btn-primary">✅ Giao hàng thành công</button>
+        </form>
+      <% } %>
+      <% if (['cho_xac_nhan', 'da_xac_nhan', 'dang_lay_hang', 'da_dong_goi'].includes(order.status)) { %>
+        <form action="/admin/orders/<%= order.id %>/cancel" method="post" class="cancel-form"
+              onsubmit="return confirm('Hủy đơn #<%= order.id %>?');">
+          <label>Lý do hủy (bắt buộc, sẽ gửi thông báo cho khách hàng)
+            <input type="text" name="reason" required placeholder="Ví dụ: hết hàng, khách yêu cầu hủy…">
+          </label>
+          <button type="submit" class="btn btn-danger">❌ Hủy đơn<%= order.status !== 'cho_xac_nhan' ? ' (hoàn kho)' : '' %></button>
+        </form>
+      <% } %>
+      <% if (['da_giao', 'da_huy'].includes(order.status)) { %>
+        <p class="muted">Đơn đã kết thúc, không còn thao tác.</p>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Lịch sử trạng thái</h2>
+    <ul class="timeline">
+      <% for (const h of history) { %>
+        <li class="timeline-item <%= h.status === 'da_huy' ? 'timeline-cancel' : '' %>">
+          <span class="timeline-dot"></span>
+          <div>
+            <strong><%= STATUS_LABELS[h.status] %></strong>
+            <div class="muted small"><%= h.created_at %><% if (h.changed_by_name) { %> — <%= h.changed_by_name %><% } %></div>
+            <% if (h.note) { %><div class="small"><%= h.note %></div><% } %>
+          </div>
+        </li>
+      <% } %>
+    </ul>
+  </div>
+</div>
+
+<%- include('../layout/footer') %>

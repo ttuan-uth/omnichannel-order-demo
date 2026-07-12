@@ -1,0 +1,51 @@
+<%- include('../layout/header') %>
+
+<h1>Quản trị đơn hàng (OMS / WMS / TMS)</h1>
+
+<%- include('_low-stock-warning', { lowStockProducts, LOW_STOCK_THRESHOLD, showInventoryLink: true }) %>
+
+<div class="status-cards">
+  <a href="/admin" class="status-card <%= !statusFilter ? 'active' : '' %>">
+    <span class="count"><%= Object.values(counts).reduce((a, b) => a + b, 0) %></span> Tất cả
+  </a>
+  <% for (const [status, label] of Object.entries(STATUS_LABELS)) { %>
+    <a href="/admin?status=<%= status %>" class="status-card <%= statusFilter === status ? 'active' : '' %>">
+      <span class="count"><%= counts[status] %></span> <%= label %>
+    </a>
+  <% } %>
+</div>
+
+<% if (orders.length === 0) { %>
+  <div class="empty-state"><p>Chưa có đơn hàng nào<%= statusFilter ? ' ở trạng thái này' : '' %>.</p></div>
+<% } else { %>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Mã đơn</th>
+        <th>Khách hàng</th>
+        <th>Ngày đặt</th>
+        <th>Kênh đặt</th>
+        <th>Cách nhận</th>
+        <th>Tổng tiền</th>
+        <th>Trạng thái</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% for (const o of orders) { %>
+        <tr>
+          <td>#<%= o.id %></td>
+          <td><%= o.customer_name %></td>
+          <td><%= o.created_at %></td>
+          <td><%= ORDER_CHANNEL_LABELS[o.order_channel] %></td>
+          <td><%= RECEIVE_METHOD_LABELS[o.receive_method] %></td>
+          <td><%= formatVND(o.total) %></td>
+          <td><span class="status status-<%= o.status %>"><%= STATUS_LABELS[o.status] %></span></td>
+          <td><a href="/admin/orders/<%= o.id %>">Xử lý →</a></td>
+        </tr>
+      <% } %>
+    </tbody>
+  </table>
+<% } %>
+
+<%- include('../layout/footer') %>

@@ -1,0 +1,65 @@
+<%- include('../layout/header') %>
+
+<p><a href="/orders">← Lịch sử đơn hàng</a></p>
+<h1>Đơn hàng #<%= order.id %>
+  <span class="status status-<%= order.status %>"><%= STATUS_LABELS[order.status] %></span>
+</h1>
+
+<div class="checkout-grid">
+  <div class="card">
+    <h2>Thông tin đơn</h2>
+    <ul class="info-list">
+      <li><strong>Ngày đặt:</strong> <%= order.created_at %></li>
+      <li><strong>Kênh đặt hàng:</strong> <%= ORDER_CHANNEL_LABELS[order.order_channel] %></li>
+      <li><strong>Cách nhận:</strong> <%= RECEIVE_METHOD_LABELS[order.receive_method] %></li>
+      <li><strong>Người nhận:</strong> <%= order.receiver_name %> — <%= order.receiver_phone %></li>
+      <% if (order.address) { %><li><strong>Địa chỉ:</strong> <%= order.address %></li><% } %>
+      <% if (order.tracking_code) { %>
+        <li><strong>Mã vận đơn:</strong> <span class="tracking-code"><%= order.tracking_code %></span></li>
+      <% } %>
+      <% if (order.cancel_reason) { %>
+        <li><strong>Lý do hủy:</strong> <span class="cancel-reason"><%= order.cancel_reason %></span></li>
+      <% } %>
+      <li><strong>Thanh toán:</strong> <%= PAYMENT_METHOD_LABELS[order.payment_method] %>
+        — <span class="status status-<%= order.payment_status === 'da_thanh_toan' ? 'da_giao' : 'cho_xac_nhan' %>"><%= PAYMENT_STATUS_LABELS[order.payment_status] %></span></li>
+      <li><strong>Tổng tiền:</strong> <span class="price"><%= formatVND(order.total) %></span></li>
+    </ul>
+
+    <% if (order.status === 'dang_giao') { %>
+      <form action="/orders/<%= order.id %>/confirm-received" method="post"
+            onsubmit="return confirm('Xác nhận bạn đã nhận được đơn hàng #<%= order.id %>?');">
+        <button type="submit" class="btn btn-primary">✅ Xác nhận đã nhận hàng</button>
+      </form>
+    <% } %>
+
+    <h2>Sản phẩm</h2>
+    <table class="table">
+      <tbody>
+        <% for (const it of items) { %>
+          <tr>
+            <td><%= it.image_emoji %> <%= it.name %> × <%= it.quantity %></td>
+            <td class="text-right"><%= formatVND(it.price * it.quantity) %></td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Theo dõi đơn hàng</h2>
+    <ul class="timeline">
+      <% for (const h of history) { %>
+        <li class="timeline-item <%= h.status === 'da_huy' ? 'timeline-cancel' : '' %>">
+          <span class="timeline-dot"></span>
+          <div>
+            <strong><%= STATUS_LABELS[h.status] %></strong>
+            <div class="muted small"><%= h.created_at %></div>
+            <% if (h.note) { %><div class="small"><%= h.note %></div><% } %>
+          </div>
+        </li>
+      <% } %>
+    </ul>
+  </div>
+</div>
+
+<%- include('../layout/footer') %>

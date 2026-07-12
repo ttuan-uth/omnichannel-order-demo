@@ -1,0 +1,40 @@
+<%- include('../layout/header') %>
+
+<h1>Quản lý tồn kho (WMS)</h1>
+<p class="muted">Sản phẩm <strong>hết hàng</strong> (tồn = 0) tô màu đỏ; sản phẩm tồn dưới <strong><%= LOW_STOCK_THRESHOLD %></strong> tô màu vàng cảnh báo — mô phỏng "dự đoán tồn kho" đơn giản.</p>
+
+<%- include('_low-stock-warning', { lowStockProducts, LOW_STOCK_THRESHOLD, showInventoryLink: false }) %>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Sản phẩm</th>
+      <th>Giá</th>
+      <th>Tồn kho</th>
+      <th>Đã bán</th>
+      <th>Cập nhật tồn kho</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% for (const p of products) { %>
+      <tr class="<%= p.stock === 0 ? 'row-out-stock' : (p.stock < LOW_STOCK_THRESHOLD ? 'row-low-stock' : '') %>">
+        <td><%= p.image_emoji %> <%= p.name %></td>
+        <td><%= formatVND(p.price) %></td>
+        <td>
+          <%= p.stock %>
+          <% if (p.stock === 0) { %><span class="badge badge-danger">Hết hàng</span>
+          <% } else if (p.stock < LOW_STOCK_THRESHOLD) { %><span class="badge badge-warn">⚠️ Sắp hết</span><% } %>
+        </td>
+        <td><%= p.sold_count %></td>
+        <td>
+          <form action="/admin/inventory/<%= p.id %>" method="post" class="inline-form">
+            <input type="number" name="stock" value="<%= p.stock %>" min="0" required>
+            <button type="submit" class="btn btn-small">Lưu</button>
+          </form>
+        </td>
+      </tr>
+    <% } %>
+  </tbody>
+</table>
+
+<%- include('../layout/footer') %>

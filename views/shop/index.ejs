@@ -1,0 +1,56 @@
+<%- include('../layout/header') %>
+
+<h1>Sản phẩm nhà thuốc</h1>
+
+<form class="filter-bar" method="get" action="/">
+  <input type="text" name="q" value="<%= q %>" placeholder="Tìm theo tên sản phẩm…">
+  <select name="sort">
+    <option value="name_asc" <%= sort === 'name_asc' ? 'selected' : '' %>>Tên A → Z</option>
+    <option value="name_desc" <%= sort === 'name_desc' ? 'selected' : '' %>>Tên Z → A</option>
+    <option value="price_asc" <%= sort === 'price_asc' ? 'selected' : '' %>>Giá tăng dần</option>
+    <option value="price_desc" <%= sort === 'price_desc' ? 'selected' : '' %>>Giá giảm dần</option>
+  </select>
+  <button type="submit" class="btn btn-primary">Tìm</button>
+  <% if (q || sort !== 'name_asc') { %>
+    <a href="/" class="btn">Xóa lọc</a>
+  <% } %>
+</form>
+
+<% if (products.length === 0) { %>
+  <div class="empty-state">
+    <p>Không tìm thấy sản phẩm nào<% if (q) { %> khớp với "<%= q %>"<% } %>.</p>
+    <p><a href="/">← Xem tất cả sản phẩm</a></p>
+  </div>
+<% } else { %>
+  <div class="product-grid">
+    <% for (const p of products) { %>
+      <div class="product-card">
+        <a href="/products/<%= p.id %>" class="product-emoji-link">
+          <div class="product-emoji"><%= p.image_emoji || '💊' %></div>
+        </a>
+        <h3><a href="/products/<%= p.id %>"><%= p.name %></a></h3>
+        <p class="muted"><%= p.description %></p>
+        <p class="price"><%= formatVND(p.price) %></p>
+        <p class="stock <%= p.stock === 0 ? 'stock-out' : (p.stock < LOW_STOCK_THRESHOLD ? 'stock-low' : '') %>">
+          <% if (p.stock === 0) { %>Hết hàng<% } else { %>Còn <%= p.stock %> sản phẩm<% } %>
+        </p>
+        <p class="sold-count">Đã bán: <%= p.sold_count %></p>
+        <% if (currentUser && currentUser.role === 'customer') { %>
+          <% if (p.stock > 0) { %>
+            <form action="/cart/add" method="post" class="add-to-cart">
+              <input type="hidden" name="product_id" value="<%= p.id %>">
+              <input type="number" name="quantity" value="1" min="1" max="<%= p.stock %>">
+              <button type="submit" class="btn btn-primary">Thêm vào giỏ</button>
+            </form>
+          <% } else { %>
+            <button type="button" class="btn add-to-cart" disabled>Hết hàng</button>
+          <% } %>
+        <% } else if (!currentUser) { %>
+          <p class="muted small"><a href="/login">Đăng nhập</a> để mua hàng</p>
+        <% } %>
+      </div>
+    <% } %>
+  </div>
+<% } %>
+
+<%- include('../layout/footer') %>

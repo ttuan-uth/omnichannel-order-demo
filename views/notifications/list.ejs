@@ -1,0 +1,22 @@
+<%- include('../layout/header') %>
+
+<h1>Thông báo</h1>
+
+<% if (notifications.length === 0) { %>
+  <div class="empty-state">
+    <p>Chưa có thông báo nào.</p>
+  </div>
+<% } else { %>
+  <ul class="notification-list">
+    <% for (const n of notifications) { %>
+      <li class="notification-item <%= n.is_read ? '' : 'notification-unread' %>">
+        <a href="/notifications/<%= n.id %>">
+          <span class="notification-message"><%= n.message %></span>
+          <span class="muted small"><%= n.created_at %><% if (n.order_id) { %> — xem đơn hàng #<%= n.order_id %> →<% } %></span>
+        </a>
+      </li>
+    <% } %>
+  </ul>
+<% } %>
+
+<%- include('../layout/footer') %>

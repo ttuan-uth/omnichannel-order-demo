@@ -1,0 +1,143 @@
+<%- include('../layout/header') %>
+
+<h1>Đặt hàng</h1>
+
+<div class="checkout-grid">
+  <div class="card">
+    <h2>Thông tin nhận hàng</h2>
+    <form action="/checkout" method="post" id="checkout-form">
+      <label>Họ tên người nhận
+        <input type="text" name="receiver_name" placeholder="VD: Nguyễn Văn A" required>
+      </label>
+      <label>Số điện thoại
+        <input type="tel" name="receiver_phone" id="receiver-phone" required
+               pattern="(0|\+84)[35789][0-9]{8}"
+               placeholder="VD: 0912345678 hoặc +84912345678"
+               title="Số điện thoại không đúng định dạng (VD: 0912345678 hoặc +84912345678)">
+      </label>
+      <label>Kênh đặt hàng (giả lập omnichannel)
+        <select name="order_channel" required>
+          <% for (const [value, label] of Object.entries(ORDER_CHANNEL_LABELS)) { %>
+            <option value="<%= value %>"><%= label %></option>
+          <% } %>
+        </select>
+      </label>
+      <label>Cách nhận hàng
+        <select name="receive_method" id="receive-method" required>
+          <% for (const [value, label] of Object.entries(RECEIVE_METHOD_LABELS)) { %>
+            <option value="<%= value %>"><%= label %></option>
+          <% } %>
+        </select>
+      </label>
+      <label id="address-field">Địa chỉ giao hàng
+        <input type="text" name="address" placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/TP">
+      </label>
+
+      <label>Phương thức thanh toán</label>
+      <div class="payment-options">
+        <label class="payment-option">
+          <input type="radio" name="payment_method" value="cod" checked>
+          <span>Thanh toán khi nhận hàng (COD)</span>
+        </label>
+        <label class="payment-option">
+          <input type="radio" name="payment_method" value="online">
+          <span>Thanh toán online (demo — không tích hợp cổng thật)</span>
+        </label>
+      </div>
+
+      <div class="card-fields" id="card-fields" style="display: none;">
+        <label>Số thẻ
+          <input type="text" name="card_number" id="card-number" inputmode="numeric"
+                 pattern="\d{16}" maxlength="16" placeholder="16 chữ số, VD: 4111111111111111">
+        </label>
+        <label>Tên chủ thẻ
+          <input type="text" name="card_name" id="card-name" placeholder="VD: NGUYEN VAN A">
+        </label>
+        <div class="card-row">
+          <label>Ngày hết hạn
+            <input type="text" name="card_expiry" id="card-expiry" pattern="(0[1-9]|1[0-2])/\d{2}" placeholder="MM/YY">
+          </label>
+          <label>CVV
+            <input type="text" name="card_cvv" id="card-cvv" inputmode="numeric" pattern="\d{3,4}" maxlength="4" placeholder="3-4 số">
+          </label>
+        </div>
+        <p class="payment-note">🔒 Demo học tập: thông tin thẻ chỉ để minh họa, <strong>không được lưu vào hệ thống</strong>.</p>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Xác nhận đặt hàng</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Đơn hàng của bạn</h2>
+    <table class="table">
+      <tbody>
+        <% for (const it of items) { %>
+          <tr>
+            <td><%= it.product.image_emoji %> <%= it.product.name %> × <%= it.quantity %></td>
+            <td class="text-right"><%= formatVND(it.lineTotal) %></td>
+          </tr>
+        <% } %>
+        <tr>
+          <td><strong>Tổng cộng</strong></td>
+          <td class="text-right"><strong class="price"><%= formatVND(total) %></strong></td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="muted small">Demo học tập — không có thanh toán thật (mặc định COD/thanh toán khi nhận).</p>
+  </div>
+</div>
+
+<script>
+  // Ẩn ô địa chỉ khi chọn nhận tại nhà thuốc
+  const methodSelect = document.getElementById('receive-method');
+  const addressField = document.getElementById('address-field');
+  function toggleAddress() {
+    const needAddress = methodSelect.value === 'giao_tan_noi';
+    addressField.style.display = needAddress ? '' : 'none';
+    addressField.querySelector('input').required = needAddress;
+  }
+  methodSelect.addEventListener('change', toggleAddress);
+  toggleAddress();
+
+  // Ẩn/hiện form thẻ theo phương thức thanh toán; chỉ bắt buộc nhập khi chọn online
+  const cardFields = document.getElementById('card-fields');
+  const cardInputs = cardFields.querySelectorAll('input');
+  function toggleCardFields() {
+    const online = document.querySelector('input[name="payment_method"]:checked').value === 'online';
+    cardFields.style.display = online ? '' : 'none';
+    cardInputs.forEach((inp) => { inp.required = online; });
+  }
+  document.querySelectorAll('input[name="payment_method"]').forEach((r) =>
+    r.addEventListener('change', toggleCardFields)
+  );
+  toggleCardFields();
+
+  // Validate số điện thoại VN + thông tin thẻ (nếu online) phía client (server vẫn kiểm tra lại)
+  const checkoutForm = document.getElementById('checkout-form');
+  const phoneInput = document.getElementById('receiver-phone');
+  const PHONE_RE = /^(0|\+84)[35789][0-9]{8}$/;
+  checkoutForm.addEventListener('submit', (e) => {
+    const value = phoneInput.value.trim().replace(/\s+/g, '');
+    if (!PHONE_RE.test(value)) {
+      e.preventDefault();
+      alert('Số điện thoại không đúng định dạng (VD: 0912345678 hoặc +84912345678)');
+      phoneInput.focus();
+      return;
+    }
+    const online = document.querySelector('input[name="payment_method"]:checked').value === 'online';
+    if (online) {
+      const num = document.getElementById('card-number').value.replace(/\s+/g, '');
+      const name = document.getElementById('card-name').value.trim();
+      const exp = document.getElementById('card-expiry').value.trim();
+      const cvv = document.getElementById('card-cvv').value.trim();
+      const okCard = /^\d{16}$/.test(num) && name.length > 0 && /^(0[1-9]|1[0-2])\/\d{2}$/.test(exp) && /^\d{3,4}$/.test(cvv);
+      if (!okCard) {
+        e.preventDefault();
+        alert('Thông tin thẻ không hợp lệ (số thẻ 16 số, ngày hết hạn MM/YY, CVV 3-4 số).');
+      }
+    }
+  });
+</script>
+
+<%- include('../layout/footer') %>

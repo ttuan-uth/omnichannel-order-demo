@@ -1,0 +1,32 @@
+<%- include('../layout/header') %>
+
+<p><a href="/">← Danh sách sản phẩm</a></p>
+
+<div class="product-detail card">
+  <div class="product-detail-emoji"><%= product.image_emoji || '💊' %></div>
+  <div class="product-detail-info">
+    <h1><%= product.name %></h1>
+    <p class="muted"><%= product.description %></p>
+    <p class="price price-lg"><%= formatVND(product.price) %></p>
+    <p class="stock <%= product.stock === 0 ? 'stock-out' : (product.stock < LOW_STOCK_THRESHOLD ? 'stock-low' : '') %>">
+      <% if (product.stock === 0) { %>Hết hàng<% } else { %>Còn <%= product.stock %> sản phẩm trong kho<% } %>
+    </p>
+    <p class="sold-count">Đã bán: <%= product.sold_count %></p>
+
+    <% if (currentUser && currentUser.role === 'customer') { %>
+      <% if (product.stock > 0) { %>
+        <form action="/cart/add" method="post" class="add-to-cart">
+          <input type="hidden" name="product_id" value="<%= product.id %>">
+          <input type="number" name="quantity" value="1" min="1" max="<%= product.stock %>">
+          <button type="submit" class="btn btn-primary">Thêm vào giỏ</button>
+        </form>
+      <% } else { %>
+        <button type="button" class="btn add-to-cart" disabled>Hết hàng</button>
+      <% } %>
+    <% } else if (!currentUser) { %>
+      <p class="muted"><a href="/login">Đăng nhập</a> để mua hàng</p>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../layout/footer') %>

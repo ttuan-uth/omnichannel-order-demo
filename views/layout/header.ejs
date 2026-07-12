@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> — Nhà thuốc</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="container header-inner">
+    <a href="/" class="brand">💊 Nhà thuốc <span class="brand-sub">E-Logistics Omnichannel</span></a>
+    <nav class="nav">
+      <a href="/">Sản phẩm</a>
+      <% if (currentUser) { %>
+        <% if (currentUser.role === 'admin') { %>
+          <a href="/admin">Quản trị đơn</a>
+          <a href="/admin/inventory">Tồn kho</a>
+          <a href="/account">Tài khoản của tôi</a>
+        <% } else { %>
+          <a href="/cart">Giỏ hàng<% if (cartCount > 0) { %> <span class="badge"><%= cartCount %></span><% } %></a>
+          <a href="/orders">Đơn hàng của tôi</a>
+          <a href="/account">Tài khoản của tôi</a>
+        <% } %>
+        <a href="/notifications" class="nav-bell" title="Thông báo">🔔<% if (unreadNotifications > 0) { %> <span class="badge"><%= unreadNotifications %></span><% } %></a>
+        <form action="/logout" method="post" class="inline-form">
+          <button type="submit" class="link-button">Đăng xuất (<%= currentUser.username %>)</button>
+        </form>
+      <% } else { %>
+        <a href="/login">Đăng nhập</a>
+        <a href="/register">Đăng ký</a>
+      <% } %>
+    </nav>
+  </div>
+</header>
+<main class="container">
+  <% if (flash) { %>
+    <div class="flash flash-<%= flash.type %>"><%= flash.message %></div>
+  <% } %>

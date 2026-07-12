@@ -1,0 +1,30 @@
+<%
+  const outOfStock = lowStockProducts.filter((p) => p.stock === 0);
+  const lowStock = lowStockProducts.filter((p) => p.stock > 0 && p.stock < LOW_STOCK_THRESHOLD);
+%>
+<div class="card warn-card">
+  <h2>⚠️ Cảnh báo tồn kho (dưới <%= LOW_STOCK_THRESHOLD %> sản phẩm)</h2>
+  <% if (outOfStock.length === 0 && lowStock.length === 0) { %>
+    <p class="muted">Không có mặt hàng nào dưới <%= LOW_STOCK_THRESHOLD %> sản phẩm trong kho.</p>
+  <% } else { %>
+    <% if (outOfStock.length > 0) { %>
+      <h3 class="warn-group-title out-stock">🔴 Hết hàng (tồn = 0)</h3>
+      <ul class="low-stock-list">
+        <% for (const p of outOfStock) { %>
+          <li><%= p.image_emoji %> <%= p.name %> — <strong>đã hết hàng</strong></li>
+        <% } %>
+      </ul>
+    <% } %>
+    <% if (lowStock.length > 0) { %>
+      <h3 class="warn-group-title low-stock">🟡 Sắp hết hàng (tồn 1–<%= LOW_STOCK_THRESHOLD - 1 %>)</h3>
+      <ul class="low-stock-list">
+        <% for (const p of lowStock) { %>
+          <li><%= p.image_emoji %> <%= p.name %> — còn <strong><%= p.stock %></strong></li>
+        <% } %>
+      </ul>
+    <% } %>
+  <% } %>
+  <% if (typeof showInventoryLink === 'undefined' || showInventoryLink) { %>
+    <p><a href="/admin/inventory">→ Quản lý tồn kho</a></p>
+  <% } %>
+</div>

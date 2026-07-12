@@ -1,0 +1,39 @@
+<%- include('../layout/header') %>
+
+<h1>Lịch sử đơn hàng</h1>
+
+<% if (orders.length === 0) { %>
+  <div class="empty-state">
+    <p>Bạn chưa có đơn hàng nào.</p>
+    <p><a href="/">← Xem sản phẩm</a></p>
+  </div>
+<% } else { %>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Mã đơn</th>
+        <th>Ngày đặt</th>
+        <th>Kênh đặt</th>
+        <th>Cách nhận</th>
+        <th>Tổng tiền</th>
+        <th>Trạng thái</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% for (const o of orders) { %>
+        <tr>
+          <td>#<%= o.id %></td>
+          <td><%= o.created_at %></td>
+          <td><%= ORDER_CHANNEL_LABELS[o.order_channel] %></td>
+          <td><%= RECEIVE_METHOD_LABELS[o.receive_method] %></td>
+          <td><%= formatVND(o.total) %></td>
+          <td><span class="status status-<%= o.status %>"><%= STATUS_LABELS[o.status] %></span></td>
+          <td><a href="/orders/<%= o.id %>">Theo dõi →</a></td>
+        </tr>
+      <% } %>
+    </tbody>
+  </table>
+<% } %>
+
+<%- include('../layout/footer') %>

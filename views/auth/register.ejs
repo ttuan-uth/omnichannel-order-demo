@@ -1,0 +1,20 @@
+<%- include('../layout/header') %>
+
+<div class="auth-box">
+  <h1>Đăng ký tài khoản</h1>
+  <form action="/register" method="post">
+    <label>Họ và tên
+      <input type="text" name="full_name" required autofocus>
+    </label>
+    <label>Tên đăng nhập
+      <input type="text" name="username" required>
+    </label>
+    <label>Mật khẩu (ít nhất 6 ký tự)
+      <input type="password" name="password" required minlength="6">
+    </label>
+    <button type="submit" class="btn btn-primary">Đăng ký</button>
+  </form>
+  <p class="muted">Đã có tài khoản? <a href="/login">Đăng nhập</a></p>
+</div>
+
+<%- include('../layout/footer') %>

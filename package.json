@@ -1,0 +1,25 @@
+{
+  "name": "omnichannel-order-demo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Web demo mô phỏng quy trình E-Logistics omnichannel của nhà thuốc (OMS - WMS - TMS)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "better-sqlite3": "^11.10.0",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1"
+  },
+  "allowScripts": {
+    "bcrypt@5.1.1": true,
+    "better-sqlite3@11.10.0": true
+  }
+}

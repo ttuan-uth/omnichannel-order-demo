@@ -1,0 +1,103 @@
+<%- include('../layout/header') %>
+
+<h1>Tài khoản của tôi</h1>
+
+<div class="card">
+  <h2>Thông tin tài khoản</h2>
+  <form action="/account/profile" method="post">
+    <label>Họ và tên hiển thị
+      <input type="text" name="full_name" value="<%= account.full_name %>" required>
+    </label>
+    <label>Tên đăng nhập
+      <input type="text" name="username" value="<%= account.username %>" required>
+    </label>
+    <button type="submit" class="btn btn-primary">Lưu thông tin</button>
+  </form>
+</div>
+
+<div class="card">
+  <h2>Đổi mật khẩu</h2>
+  <form action="/account/password" method="post">
+    <label>Mật khẩu hiện tại
+      <span class="password-field">
+        <input type="password" name="current_password" required autocomplete="current-password">
+        <button type="button" class="toggle-password" data-shown="false" aria-label="Hiện/ẩn mật khẩu">👁️ Hiện</button>
+      </span>
+    </label>
+    <label>Mật khẩu mới (ít nhất 6 ký tự)
+      <span class="password-field">
+        <input type="password" name="new_password" required minlength="6" autocomplete="new-password">
+        <button type="button" class="toggle-password" data-shown="false" aria-label="Hiện/ẩn mật khẩu">👁️ Hiện</button>
+      </span>
+    </label>
+    <label>Xác nhận mật khẩu mới
+      <span class="password-field">
+        <input type="password" name="confirm_password" required minlength="6" autocomplete="new-password">
+        <button type="button" class="toggle-password" data-shown="false" aria-label="Hiện/ẩn mật khẩu">👁️ Hiện</button>
+      </span>
+    </label>
+    <button type="submit" class="btn btn-primary">Đổi mật khẩu</button>
+  </form>
+
+  <script>
+    document.querySelectorAll('.toggle-password').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var input = btn.parentElement.querySelector('input');
+        var shown = btn.getAttribute('data-shown') === 'true';
+        input.type = shown ? 'password' : 'text';
+        btn.setAttribute('data-shown', shown ? 'false' : 'true');
+        btn.textContent = shown ? '👁️ Hiện' : '🙈 Ẩn';
+      });
+    });
+  </script>
+</div>
+
+<% if (currentUser && currentUser.role !== 'admin') { %>
+<div class="card">
+  <h2>Lịch sử xem hàng</h2>
+  <% if (viewedProducts.length === 0) { %>
+    <p class="muted">Bạn chưa xem sản phẩm nào.</p>
+  <% } else { %>
+    <ul class="view-history">
+      <% for (const v of viewedProducts) { %>
+        <li>
+          <a href="/products/<%= v.id %>"><%= v.image_emoji %> <%= v.name %></a>
+          <span class="muted small"><%= formatVND(v.price) %> — xem lúc <%= v.last_viewed %></span>
+        </li>
+      <% } %>
+    </ul>
+  <% } %>
+</div>
+
+<div class="card">
+  <h2>Lịch sử giao dịch</h2>
+  <% if (orders.length === 0) { %>
+    <p class="muted">Bạn chưa có đơn hàng nào. <a href="/">Mua sắm ngay →</a></p>
+  <% } else { %>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Mã đơn</th>
+          <th>Ngày đặt</th>
+          <th>Tổng tiền</th>
+          <th>Trạng thái</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% for (const o of orders) { %>
+          <tr>
+            <td>#<%= o.id %></td>
+            <td><%= o.created_at %></td>
+            <td><%= formatVND(o.total) %></td>
+            <td><span class="status status-<%= o.status %>"><%= STATUS_LABELS[o.status] %></span></td>
+            <td><a href="/orders/<%= o.id %>">Chi tiết →</a></td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  <% } %>
+</div>
+<% } %>
+
+<%- include('../layout/footer') %>
