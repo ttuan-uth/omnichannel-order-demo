@@ -32,6 +32,16 @@
       </form>
     <% } %>
 
+    <% if (order.status === 'cho_xac_nhan') { %>
+      <form action="/orders/<%= order.id %>/cancel" method="post" class="cancel-form"
+            onsubmit="return confirm('Bạn chắc chắn muốn hủy đơn hàng #<%= order.id %>? Thao tác này không thể hoàn tác.');">
+        <label>Lý do hủy (không bắt buộc)
+          <input type="text" name="reason" placeholder="Ví dụ: đặt nhầm, đổi ý…">
+        </label>
+        <button type="submit" class="btn btn-danger">❌ Hủy đơn hàng</button>
+      </form>
+    <% } %>
+
     <h2>Sản phẩm</h2>
     <table class="table">
       <tbody>
