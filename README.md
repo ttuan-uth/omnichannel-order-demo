@@ -99,7 +99,7 @@ Có thể đăng ký thêm tài khoản khách mới qua trang **Đăng ký** (m
 ### A. Phía khách hàng — đặt hàng
 
 1. **Đăng nhập customer** (`khach1` / `khach123`).
-2. Ở **trang chủ** (lưới 4 sản phẩm/hàng): **tìm kiếm sản phẩm theo tên** (ô tìm kiếm, không phân biệt hoa/thường — gõ `panadol` vẫn ra "Panadol Extra") và **sắp xếp** (tên A→Z / Z→A, giá tăng / giảm). Mỗi thẻ sản phẩm hiển thị giá, tồn kho và **số lượng đã bán**.
+2. Ở **trang chủ** (lưới 4 sản phẩm/hàng): **tìm kiếm sản phẩm theo tên — không phân biệt hoa/thường và không dấu** (gõ `panadol`, `KHAU TRANG` hay `dau gio` đều ra đúng "Panadol Extra", "Khẩu trang y tế…", "Dầu gió xanh Con Ó") và **sắp xếp** (tên A→Z / Z→A, giá tăng / giảm). Khi gõ ≥ 2 ký tự, ô tìm kiếm hiện **dropdown gợi ý** (tối đa 6 sản phẩm kèm giá) — bấm vào một gợi ý để mở thẳng trang chi tiết sản phẩm. Mỗi thẻ sản phẩm hiển thị giá, tồn kho và **số lượng đã bán**.
 3. Bấm vào một sản phẩm để xem **trang chi tiết** (mô tả, giá, tồn kho); mỗi lượt xem của khách đã đăng nhập được ghi lại để hiển thị ở mục *Lịch sử xem hàng*.
 4. **Thêm vào giỏ** → vào **Giỏ hàng**: sửa số lượng, xóa sản phẩm (tổng số lượng mỗi sản phẩm không vượt quá tồn kho, hệ thống tự điều chỉnh và cảnh báo).
 5. **Tiến hành đặt hàng (checkout)**:
@@ -125,6 +125,7 @@ Có thể đăng ký thêm tài khoản khách mới qua trang **Đăng ký** (m
 ### C. Phía khách hàng — theo dõi, nhận hàng, thông báo, tài khoản
 
 8. **Đăng xuất** → đăng nhập lại **customer** → vào **Đơn hàng của tôi** → mở đơn: **timeline trạng thái** cập nhật đủ các bước kèm **mã vận đơn**, **phương thức + trạng thái thanh toán**, và **lý do hủy** nếu đơn bị hủy.
+   - **Khách tự hủy đơn:** khi đơn vẫn ở trạng thái **Chờ xác nhận** (admin chưa xử lý), trang chi tiết đơn có nút **"Hủy đơn hàng"** kèm ô nhập lý do (không bắt buộc). Bấm hủy → đơn chuyển sang **Đã hủy** và tất cả admin nhận thông báo. Khi đơn đã được admin xác nhận trở đi thì nút này không còn — muốn hủy phải liên hệ để được hỗ trợ.
 9. Khi đơn ở trạng thái **đang giao**, khách có thể tự bấm **"Xác nhận đã nhận hàng"** → đơn chuyển sang *đã giao* (do khách xác nhận), gửi thông báo cho admin.
 10. Bấm **icon chuông 🔔** trên đầu trang để xem **thông báo** (badge đếm số chưa đọc): mỗi lần đơn đổi trạng thái khách nhận một thông báo; bấm vào sẽ đánh dấu đã đọc và mở đúng đơn liên quan.
 11. Vào **Tài khoản của tôi** (`/account`):
