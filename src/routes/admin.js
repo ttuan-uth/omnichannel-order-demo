@@ -4,6 +4,7 @@ const {
   changeOrderStatus,
   markDelivered,
   upsertOrderNotification,
+  removeVietnameseTones,
   LOW_STOCK_THRESHOLD,
   STATUS_LABELS,
   STOCK_DEDUCTED_STATUSES,
@@ -303,11 +304,25 @@ router.post('/admin/orders/:id/cancel', (req, res) => {
 });
 
 router.get('/admin/inventory', (req, res) => {
-  const products = db.prepare('SELECT * FROM products ORDER BY stock, name').all();
+  const q = (req.query.q || '').trim();
+
+  // Chỉ lọc BẢNG danh sách theo tên (không dấu, không phân biệt hoa/thường —
+  // tái dùng removeVietnameseTones() + products.name_normalized như tìm kiếm trang chủ).
+  let products;
+  if (q) {
+    const qn = removeVietnameseTones(q);
+    products = db
+      .prepare('SELECT * FROM products WHERE name_normalized LIKE ? ORDER BY stock, name')
+      .all(`%${qn}%`);
+  } else {
+    products = db.prepare('SELECT * FROM products ORDER BY stock, name').all();
+  }
+
+  // Khối cảnh báo tồn kho thấp vẫn hiển thị TOÀN BỘ sản phẩm liên quan, không lọc theo tìm kiếm.
   const lowStockProducts = db
     .prepare('SELECT * FROM products WHERE stock < ? ORDER BY stock')
     .all(LOW_STOCK_THRESHOLD);
-  res.render('admin/inventory', { title: 'Quản lý tồn kho (WMS)', products, lowStockProducts });
+  res.render('admin/inventory', { title: 'Quản lý tồn kho (WMS)', products, lowStockProducts, q });
 });
 
 router.post('/admin/inventory/:id', (req, res) => {

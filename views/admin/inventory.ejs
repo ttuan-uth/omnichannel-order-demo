@@ -5,6 +5,22 @@
 
 <%- include('_low-stock-warning', { lowStockProducts, LOW_STOCK_THRESHOLD, showInventoryLink: false }) %>
 
+<form class="filter-bar" method="get" action="/admin/inventory">
+  <div class="search-box">
+    <input type="text" name="q" value="<%= q %>" placeholder="Tìm theo tên sản phẩm…" autocomplete="off">
+  </div>
+  <button type="submit" class="btn btn-primary">Tìm</button>
+  <% if (q) { %>
+    <a href="/admin/inventory" class="btn">Xóa lọc</a>
+  <% } %>
+</form>
+
+<% if (products.length === 0) { %>
+  <div class="empty-state">
+    <p>Không tìm thấy sản phẩm nào<% if (q) { %> khớp với "<%= q %>"<% } %>.</p>
+    <p><a href="/admin/inventory">← Xem tất cả sản phẩm</a></p>
+  </div>
+<% } else { %>
 <table class="table">
   <thead>
     <tr>
@@ -36,5 +52,6 @@
     <% } %>
   </tbody>
 </table>
+<% } %>
 
 <%- include('../layout/footer') %>
