@@ -3,7 +3,11 @@
 <h1>Sản phẩm nhà thuốc</h1>
 
 <form class="filter-bar" method="get" action="/">
-  <input type="text" name="q" value="<%= q %>" placeholder="Tìm theo tên sản phẩm…">
+  <div class="search-box">
+    <input type="text" name="q" id="search-input" value="<%= q %>" placeholder="Tìm theo tên sản phẩm…"
+           autocomplete="off">
+    <div id="suggest-dropdown" class="suggest-dropdown" hidden></div>
+  </div>
   <select name="sort">
     <option value="name_asc" <%= sort === 'name_asc' ? 'selected' : '' %>>Tên A → Z</option>
     <option value="name_desc" <%= sort === 'name_desc' ? 'selected' : '' %>>Tên Z → A</option>
@@ -52,5 +56,57 @@
     <% } %>
   </div>
 <% } %>
+
+<script>
+  // Gợi ý tìm kiếm (autocomplete): debounce ~300ms, tối thiểu 2 ký tự, fetch JSON, dropdown
+  (function () {
+    const input = document.getElementById('search-input');
+    const dropdown = document.getElementById('suggest-dropdown');
+    if (!input || !dropdown) return;
+    let timer = null;
+
+    const formatVND = (n) => Number(n).toLocaleString('vi-VN') + ' ₫';
+
+    function hide() { dropdown.hidden = true; dropdown.innerHTML = ''; }
+
+    async function fetchSuggest(q) {
+      try {
+        const res = await fetch('/api/products/suggest?q=' + encodeURIComponent(q));
+        if (!res.ok) return;
+        const items = await res.json();
+        if (!items.length) { hide(); return; }
+        dropdown.innerHTML = items
+          .map(
+            (p) =>
+              '<a class="suggest-item" href="/products/' + p.id + '">' +
+              '<span class="suggest-emoji">' + (p.image_emoji || '💊') + '</span>' +
+              '<span class="suggest-name"></span>' +
+              '<span class="suggest-price">' + formatVND(p.price) + '</span>' +
+              '</a>'
+          )
+          .join('');
+        // Gán tên qua textContent để tránh XSS
+        const names = dropdown.querySelectorAll('.suggest-name');
+        items.forEach((p, i) => { names[i].textContent = p.name; });
+        dropdown.hidden = false;
+      } catch (e) {
+        hide();
+      }
+    }
+
+    input.addEventListener('input', function () {
+      const q = input.value.trim();
+      clearTimeout(timer);
+      if (q.length < 2) { hide(); return; }
+      timer = setTimeout(() => fetchSuggest(q), 300);
+    });
+
+    // Ẩn dropdown khi click ra ngoài (dùng mousedown để không chặn click vào gợi ý)
+    document.addEventListener('mousedown', function (e) {
+      if (!dropdown.contains(e.target) && e.target !== input) hide();
+    });
+    input.addEventListener('blur', function () { setTimeout(hide, 150); });
+  })();
+</script>
 
 <%- include('../layout/footer') %>

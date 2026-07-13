@@ -1,5 +1,5 @@
 const express = require('express');
-const { db } = require('../db');
+const { db, removeVietnameseTones } = require('../db');
 const { requireLogin } = require('../middleware/auth');
 
 const router = express.Router();
@@ -43,13 +43,28 @@ router.get('/', (req, res) => {
 
   let products;
   if (q) {
+    // Tìm không phân biệt hoa/thường + không dấu: so khớp trên name_normalized với q đã bỏ dấu
+    const qn = removeVietnameseTones(q);
     products = db
-      .prepare(`SELECT * FROM products WHERE LOWER(name) LIKE LOWER(?) ORDER BY ${orderBy}`)
-      .all(`%${q}%`);
+      .prepare(`SELECT * FROM products WHERE name_normalized LIKE ? ORDER BY ${orderBy}`)
+      .all(`%${qn}%`);
   } else {
     products = db.prepare(`SELECT * FROM products ORDER BY ${orderBy}`).all();
   }
   res.render('shop/index', { title: 'Sản phẩm', products, q, sort });
+});
+
+// API gợi ý tìm kiếm (public): trả tối đa 6 sản phẩm khớp không dấu, dùng cho autocomplete
+router.get('/api/products/suggest', (req, res) => {
+  const q = (req.query.q || '').trim();
+  if (q.length < 2) return res.json([]);
+  const qn = removeVietnameseTones(q);
+  const rows = db
+    .prepare(
+      'SELECT id, name, price, image_emoji FROM products WHERE name_normalized LIKE ? ORDER BY name LIMIT 6'
+    )
+    .all(`%${qn}%`);
+  res.json(rows);
 });
 
 router.get('/products/:id', (req, res) => {

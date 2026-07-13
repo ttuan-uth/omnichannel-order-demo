@@ -125,6 +125,36 @@ input[type="number"] { width: 90px; display: inline-block; }
 .filter-bar input[type="text"] { flex: 1 1 240px; margin-top: 0; }
 .filter-bar select { width: auto; margin-top: 0; }
 
+/* ===== Ô tìm kiếm + dropdown gợi ý (autocomplete) ===== */
+.search-box { position: relative; flex: 1 1 240px; }
+.search-box input[type="text"] { width: 100%; margin-top: 0; }
+.suggest-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+.suggest-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  text-decoration: none;
+  color: #111827;
+  border-bottom: 1px solid #f3f4f6;
+}
+.suggest-item:last-child { border-bottom: 0; }
+.suggest-item:hover { background: #f3f4f6; }
+.suggest-emoji { font-size: 1.2rem; }
+.suggest-name { flex: 1; }
+.suggest-price { color: #2563eb; font-weight: 600; white-space: nowrap; }
+
 /* ===== Product grid ===== */
 /* 4 cột màn rộng → 2 cột tablet → 1 cột mobile */
 .product-grid {

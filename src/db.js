@@ -5,6 +5,21 @@ const bcrypt = require('bcrypt');
 
 const LOW_STOCK_THRESHOLD = 10;
 
+/**
+ * Bỏ dấu tiếng Việt + lowercase để tìm kiếm không phân biệt hoa/thường, có/không dấu.
+ * Dùng NFD tách dấu rồi loại các ký tự dấu (U+0300–U+036F); xử lý riêng đ/Đ vì
+ * normalize không tách được ký tự này.
+ */
+function removeVietnameseTones(str) {
+  if (!str) return '';
+  return str
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLowerCase();
+}
+
 // Luồng trạng thái đơn hàng (xem CLAUDE.md)
 const STATUS_LABELS = {
   cho_xac_nhan: 'Chờ xác nhận',
@@ -75,7 +90,8 @@ CREATE TABLE IF NOT EXISTS products (
   price INTEGER NOT NULL,
   stock INTEGER NOT NULL DEFAULT 0,
   sold_count INTEGER NOT NULL DEFAULT 0,
-  image_emoji TEXT
+  image_emoji TEXT,
+  name_normalized TEXT
 );
 
 CREATE TABLE IF NOT EXISTS orders (
@@ -162,6 +178,22 @@ function seed() {
 }
 seed();
 
+// Migration: đảm bảo cột products.name_normalized tồn tại cho DB cũ (SQLite không có ADD COLUMN IF NOT EXISTS)
+const productCols = db.prepare('PRAGMA table_info(products)').all();
+if (!productCols.some((c) => c.name === 'name_normalized')) {
+  db.exec('ALTER TABLE products ADD COLUMN name_normalized TEXT');
+}
+// Backfill name_normalized (tên bỏ dấu, lowercase) cho các dòng chưa có — chạy cho cả seed mới lẫn DB cũ
+const needNormalize = db.prepare('SELECT id, name FROM products WHERE name_normalized IS NULL').all();
+if (needNormalize.length > 0) {
+  const upd = db.prepare('UPDATE products SET name_normalized = ? WHERE id = ?');
+  const tx = db.transaction(() => {
+    for (const p of needNormalize) upd.run(removeVietnameseTones(p.name), p.id);
+  });
+  tx();
+  console.log(`Đã cập nhật name_normalized cho ${needNormalize.length} sản phẩm.`);
+}
+
 /**
  * Hàm chung duy nhất để chuyển trạng thái đơn hàng:
  * kiểm tra transition hợp lệ + cập nhật orders.status + ghi order_status_history.
@@ -200,6 +232,7 @@ module.exports = {
   db,
   changeOrderStatus,
   markDelivered,
+  removeVietnameseTones,
   LOW_STOCK_THRESHOLD,
   STATUS_LABELS,
   ORDER_CHANNEL_LABELS,
