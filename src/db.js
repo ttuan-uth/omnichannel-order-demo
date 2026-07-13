@@ -216,6 +216,30 @@ function changeOrderStatus(orderId, newStatus, changedBy, note) {
 }
 
 /**
+ * Thông báo cho KHÁCH liên quan tới 1 đơn hàng — gộp theo đơn: mỗi (user_id, order_id)
+ * chỉ giữ TỐI ĐA 1 dòng, luôn phản ánh trạng thái mới nhất. Nếu đã có thì UPDATE lại
+ * message + reset is_read = 0 + đẩy created_at lên now (lên đầu danh sách); chưa có thì INSERT.
+ * KHÔNG dùng cho thông báo của admin (nhiều admin cùng nhận 1 sự kiện — vẫn INSERT mới).
+ * Gọi bên trong cùng transaction với thao tác đổi trạng thái để đảm bảo nhất quán.
+ */
+function upsertOrderNotification(userId, orderId, message) {
+  const existing = db
+    .prepare('SELECT id FROM notifications WHERE user_id = ? AND order_id = ?')
+    .get(userId, orderId);
+  if (existing) {
+    db.prepare(
+      "UPDATE notifications SET message = ?, is_read = 0, created_at = datetime('now', 'localtime') WHERE id = ?"
+    ).run(message, existing.id);
+  } else {
+    db.prepare('INSERT INTO notifications (user_id, order_id, message) VALUES (?, ?, ?)').run(
+      userId,
+      orderId,
+      message
+    );
+  }
+}
+
+/**
  * Chuyển đơn sang `da_giao` + cộng dồn sold_count cho từng sản phẩm trong đơn.
  * Dùng chung cho admin "hoàn tất" và khách "xác nhận đã nhận hàng".
  * Vẫn đi qua changeOrderStatus() nên transition được kiểm tra hợp lệ như cũ.
@@ -232,6 +256,7 @@ module.exports = {
   db,
   changeOrderStatus,
   markDelivered,
+  upsertOrderNotification,
   removeVietnameseTones,
   LOW_STOCK_THRESHOLD,
   STATUS_LABELS,

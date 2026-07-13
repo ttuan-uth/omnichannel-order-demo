@@ -3,6 +3,7 @@ const {
   db,
   changeOrderStatus,
   markDelivered,
+  upsertOrderNotification,
   LOW_STOCK_THRESHOLD,
   STATUS_LABELS,
   STOCK_DEDUCTED_STATUSES,
@@ -19,14 +20,11 @@ function generateTrackingCode() {
   return `VD-${code}`;
 }
 
-// Gửi thông báo cho chủ đơn (tái dùng cơ chế notifications + badge sẵn có).
-// Gọi bên trong cùng transaction với thao tác đổi trạng thái để đảm bảo nhất quán.
+// Gửi thông báo cho chủ đơn: gộp theo đơn (1 đơn = 1 thông báo, luôn cập nhật trạng thái
+// mới nhất) qua upsertOrderNotification() trong src/db.js. Gọi bên trong cùng transaction
+// với thao tác đổi trạng thái để đảm bảo nhất quán.
 function notifyCustomer(userId, orderId, message) {
-  db.prepare('INSERT INTO notifications (user_id, order_id, message) VALUES (?, ?, ?)').run(
-    userId,
-    orderId,
-    message
-  );
+  upsertOrderNotification(userId, orderId, message);
 }
 
 function getOrderOr404(req, res) {
@@ -295,9 +293,7 @@ router.post('/admin/orders/:id/cancel', (req, res) => {
         `${needRestock ? 'Hủy đơn, đã hoàn tồn kho' : 'Hủy đơn (chưa trừ kho)'}. Lý do: ${reason}`
       );
       db.prepare('UPDATE orders SET cancel_reason = ? WHERE id = ?').run(reason, order.id);
-      db.prepare(
-        'INSERT INTO notifications (user_id, order_id, message) VALUES (?, ?, ?)'
-      ).run(order.user_id, order.id, `Đơn hàng #${order.id} của bạn đã bị hủy. Lý do: ${reason}`);
+      notifyCustomer(order.user_id, order.id, `Đơn hàng #${order.id} của bạn đã bị hủy. Lý do: ${reason}`);
     })();
     req.session.flash = { type: 'success', message: `Đã hủy đơn #${order.id}${needRestock ? ', tồn kho đã hoàn lại' : ''}. Đã gửi thông báo cho khách hàng.` };
   } catch (err) {
