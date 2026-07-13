@@ -244,6 +244,33 @@ router.post('/admin/orders/:id/mark-paid', (req, res) => {
   res.redirect(`/admin/orders/${order.id}`);
 });
 
+// Admin hoàn tác xác nhận thu tiền COD: đưa payment_status về chua_thanh_toan.
+// Chỉ cho đơn COD — đơn online tự động đã thanh toán từ lúc đặt, không phải admin xác nhận tay.
+router.post('/admin/orders/:id/unmark-paid', (req, res) => {
+  const order = getOrderOr404(req, res);
+  if (!order) return;
+  if (order.payment_method !== 'cod') {
+    req.session.flash = { type: 'error', message: 'Không thể hoàn tác thanh toán của đơn online.' };
+    return res.redirect(`/admin/orders/${order.id}`);
+  }
+  if (order.payment_status !== 'da_thanh_toan') {
+    req.session.flash = { type: 'error', message: 'Đơn này chưa được đánh dấu đã thanh toán.' };
+    return res.redirect(`/admin/orders/${order.id}`);
+  }
+  try {
+    db.transaction(() => {
+      db.prepare("UPDATE orders SET payment_status = 'chua_thanh_toan' WHERE id = ?").run(order.id);
+      db.prepare(
+        'INSERT INTO order_status_history (order_id, status, note, changed_by) VALUES (?, ?, ?, ?)'
+      ).run(order.id, order.status, 'Admin hoàn tác xác nhận thu tiền COD', req.session.user.id);
+    })();
+    req.session.flash = { type: 'success', message: `Đã hoàn tác xác nhận thu tiền COD cho đơn #${order.id}.` };
+  } catch (err) {
+    req.session.flash = { type: 'error', message: err.message };
+  }
+  res.redirect(`/admin/orders/${order.id}`);
+});
+
 // Hủy đơn: bắt buộc có lý do, hoàn kho nếu đã trừ, tạo thông báo cho khách
 router.post('/admin/orders/:id/cancel', (req, res) => {
   const order = getOrderOr404(req, res);

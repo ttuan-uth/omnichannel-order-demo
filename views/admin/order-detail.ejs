@@ -23,11 +23,16 @@
       <% } %>
       <li><strong>Thanh toán:</strong> <%= PAYMENT_METHOD_LABELS[order.payment_method] %>
         — <span class="status status-<%= order.payment_status === 'da_thanh_toan' ? 'da_giao' : 'cho_xac_nhan' %>"><%= PAYMENT_STATUS_LABELS[order.payment_status] %></span>
-        <% if (order.payment_method === 'cod' && order.payment_status === 'chua_thanh_toan'
-               && ['dang_giao', 'da_giao'].includes(order.status)) { %>
-          <form action="/admin/orders/<%= order.id %>/mark-paid" method="post" class="inline-form">
-            <button type="submit" class="btn btn-primary btn-small">💰 Xác nhận đã thu tiền COD</button>
-          </form>
+        <% if (order.payment_method === 'cod' && ['dang_giao', 'da_giao'].includes(order.status)) { %>
+          <% if (order.payment_status === 'chua_thanh_toan') { %>
+            <form action="/admin/orders/<%= order.id %>/mark-paid" method="post" class="inline-form">
+              <button type="submit" class="btn btn-primary btn-small">💰 Xác nhận đã thu tiền COD</button>
+            </form>
+          <% } else { %>
+            <form action="/admin/orders/<%= order.id %>/unmark-paid" method="post" class="inline-form">
+              <button type="submit" class="btn btn-small">↩️ Hoàn tác</button>
+            </form>
+          <% } %>
         <% } %></li>
       <li><strong>Tổng tiền:</strong> <span class="price"><%= formatVND(order.total) %></span></li>
     </ul>
