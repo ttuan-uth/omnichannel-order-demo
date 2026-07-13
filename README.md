@@ -27,7 +27,7 @@ Project phục vụ **mục đích học tập / báo cáo**, không phải hệ
 1. Cài Node.js từ <https://nodejs.org> (chọn bản **LTS**, cài mặc định).
 2. Clone repo rồi mở terminal (CMD hoặc PowerShell) tại thư mục project:
    ```
-   git clone <https://github.com/ttuan-uth/omnichannel-order-demo>
+   git clone https://github.com/ttuan-uth/omnichannel-order-demo
    cd omnichannel-order-demo
    ```
 3. Cài dependencies:
