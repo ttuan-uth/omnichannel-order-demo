@@ -209,6 +209,9 @@ router.post('/admin/orders/:id/complete', (req, res) => {
   res.redirect(`/admin/orders/${order.id}`);
 });
 
+// Các trạng thái đơn được phép thu tiền COD: chỉ khi hàng đã/đang tới tay khách.
+const COD_PAYABLE_STATUSES = ['dang_giao', 'da_giao'];
+
 // Admin xác nhận đã thu tiền COD: chỉ đổi payment_status (không đổi status đơn).
 // Chỉ áp dụng cho đơn COD chưa thanh toán — đơn online đã da_thanh_toan từ lúc checkout.
 router.post('/admin/orders/:id/mark-paid', (req, res) => {
@@ -220,6 +223,10 @@ router.post('/admin/orders/:id/mark-paid', (req, res) => {
   }
   if (order.payment_status !== 'chua_thanh_toan') {
     req.session.flash = { type: 'error', message: 'Đơn này đã được đánh dấu đã thanh toán.' };
+    return res.redirect(`/admin/orders/${order.id}`);
+  }
+  if (!COD_PAYABLE_STATUSES.includes(order.status)) {
+    req.session.flash = { type: 'error', message: 'Chỉ thu tiền COD khi đơn đang giao hoặc đã giao.' };
     return res.redirect(`/admin/orders/${order.id}`);
   }
   try {
