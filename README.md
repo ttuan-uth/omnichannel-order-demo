@@ -118,6 +118,7 @@ Có thể đăng ký thêm tài khoản khách mới qua trang **Đăng ký** (m
    - **Đóng gói xong** (packing);
    - **TMS bắt đầu giao** — tự sinh **mã vận đơn** dạng `VD-XXXXXX` (đơn *nhận tại nhà thuốc* thì thay bằng nút **Khách đã nhận hàng**);
    - **Giao hàng thành công** — đơn hoàn tất, hệ thống **cộng dồn số lượng đã bán** của từng sản phẩm.
+   - **Xác nhận đã thu tiền COD** — với đơn thanh toán **COD**, khi đơn đang ở trạng thái **Đang giao hàng (TMS)** hoặc **Đã giao / hoàn tất**, admin bấm nút **"Xác nhận đã thu tiền COD"** để đánh dấu đơn đã thanh toán (badge chuyển từ **"Chưa thanh toán"** sang **"Đã thanh toán"**). Nếu bấm nhầm, bấm **"Hoàn tác"** để quay lại trạng thái chưa thanh toán. Nút này **chỉ xuất hiện ở 2 trạng thái nói trên**, không hiện ở các bước sớm hơn (chờ xác nhận, đã xác nhận, đang lấy hàng, đã đóng gói) vì lúc đó hàng chưa tới tay khách. Riêng đơn **thanh toán online** được tự động đánh dấu *đã thanh toán* ngay từ lúc checkout nên không cần thao tác này.
    - Trước bước *đang giao*, admin có thể **Hủy đơn** — bắt buộc nhập **lý do hủy**; nếu đã trừ kho thì hoàn kho lại.
    - Mỗi lần chuyển trạng thái đều **gửi thông báo cho khách hàng** chủ đơn.
 
