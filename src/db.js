@@ -240,6 +240,19 @@ function upsertOrderNotification(userId, orderId, message) {
 }
 
 /**
+ * Gửi thông báo tới TẤT CẢ admin về 1 sự kiện đơn hàng (đơn mới, khách tự xác nhận nhận,
+ * khách tự hủy…). Nhiều admin cùng nhận nên INSERT mới cho từng admin — KHÔNG gộp/upsert
+ * như thông báo của khách. Gọi bên trong transaction nếu kèm thao tác khác.
+ */
+function notifyAllAdmins(orderId, message) {
+  const admins = db.prepare("SELECT id FROM users WHERE role = 'admin'").all();
+  const insertNoti = db.prepare(
+    'INSERT INTO notifications (user_id, order_id, message) VALUES (?, ?, ?)'
+  );
+  for (const admin of admins) insertNoti.run(admin.id, orderId, message);
+}
+
+/**
  * Chuyển đơn sang `da_giao` + cộng dồn sold_count cho từng sản phẩm trong đơn.
  * Dùng chung cho admin "hoàn tất" và khách "xác nhận đã nhận hàng".
  * Vẫn đi qua changeOrderStatus() nên transition được kiểm tra hợp lệ như cũ.
@@ -257,6 +270,7 @@ module.exports = {
   changeOrderStatus,
   markDelivered,
   upsertOrderNotification,
+  notifyAllAdmins,
   removeVietnameseTones,
   LOW_STOCK_THRESHOLD,
   STATUS_LABELS,

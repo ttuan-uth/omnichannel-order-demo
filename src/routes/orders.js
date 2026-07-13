@@ -1,5 +1,5 @@
 const express = require('express');
-const { db, markDelivered, changeOrderStatus } = require('../db');
+const { db, markDelivered, changeOrderStatus, notifyAllAdmins } = require('../db');
 const { requireLogin } = require('../middleware/auth');
 
 const router = express.Router();
@@ -47,13 +47,7 @@ router.post('/orders/:id/confirm-received', requireLogin, (req, res) => {
     db.transaction(() => {
       markDelivered(order.id, req.session.user.id, 'Khách hàng xác nhận đã nhận hàng');
       // Thông báo cho tất cả admin để họ biết mà không cần tự bấm hoàn tất
-      const admins = db.prepare("SELECT id FROM users WHERE role = 'admin'").all();
-      const insertNoti = db.prepare(
-        'INSERT INTO notifications (user_id, order_id, message) VALUES (?, ?, ?)'
-      );
-      for (const admin of admins) {
-        insertNoti.run(admin.id, order.id, `Khách hàng đã xác nhận nhận hàng cho đơn #${order.id}.`);
-      }
+      notifyAllAdmins(order.id, `Khách hàng đã xác nhận nhận hàng cho đơn #${order.id}.`);
     })();
     req.session.flash = { type: 'success', message: `Cảm ơn bạn! Đơn #${order.id} đã hoàn tất.` };
   } catch (err) {
@@ -89,13 +83,7 @@ router.post('/orders/:id/cancel', requireLogin, (req, res) => {
       );
       db.prepare('UPDATE orders SET cancel_reason = ? WHERE id = ?').run(reason, order.id);
       // Báo cho tất cả admin biết khách đã tự hủy
-      const admins = db.prepare("SELECT id FROM users WHERE role = 'admin'").all();
-      const insertNoti = db.prepare(
-        'INSERT INTO notifications (user_id, order_id, message) VALUES (?, ?, ?)'
-      );
-      for (const admin of admins) {
-        insertNoti.run(admin.id, order.id, `Khách hàng đã tự hủy đơn #${order.id}. Lý do: ${reason}`);
-      }
+      notifyAllAdmins(order.id, `Khách hàng đã tự hủy đơn #${order.id}. Lý do: ${reason}`);
     })();
     req.session.flash = { type: 'success', message: `Đã hủy đơn #${order.id}.` };
   } catch (err) {

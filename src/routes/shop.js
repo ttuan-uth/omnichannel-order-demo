@@ -1,5 +1,5 @@
 const express = require('express');
-const { db, removeVietnameseTones } = require('../db');
+const { db, removeVietnameseTones, notifyAllAdmins } = require('../db');
 const { requireLogin } = require('../middleware/auth');
 
 const router = express.Router();
@@ -264,6 +264,12 @@ router.post('/checkout', requireLogin, (req, res) => {
     db.prepare(
       'INSERT INTO order_status_history (order_id, status, note, changed_by) VALUES (?, ?, ?, ?)'
     ).run(orderId, 'cho_xac_nhan', 'Khách đặt hàng, chờ OMS xác nhận', req.session.user.id);
+
+    // Báo cho tất cả admin biết có đơn mới cần xác nhận
+    notifyAllAdmins(
+      orderId,
+      `Đơn hàng #${orderId} mới từ ${receiverName} — ${total.toLocaleString('vi-VN')}đ, cần xác nhận.`
+    );
 
     return orderId;
   });
